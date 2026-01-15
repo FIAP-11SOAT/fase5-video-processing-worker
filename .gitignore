@@ -1,0 +1,48 @@
+# Maven
+target/
+!.mvn/wrapper/maven-wrapper.jar
+*.class
+*.jar
+*.war
+*.ear
+
+# Spring Boot
+spring-boot-starter-parent/
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+temp/
+*.tmp
+*.temp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.settings/
+.project
+.classpath
+
+# Environment
+.env
+.env.local
+
+# Video files
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.wmv
+*.flv
+
+# Output
+outputs/
+uploads/
+*.zip
