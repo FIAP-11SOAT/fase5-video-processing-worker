@@ -51,6 +51,13 @@
             <version>2.21.42</version>
         </dependency>
 
+        <!-- AWS SDK for STS (necessario para IRSA) -->
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>sts</artifactId>
+            <version>2.21.42</version>
+        </dependency>
+
         <!-- Spring Cloud AWS for SQS -->
         <dependency>
             <groupId>io.awspring.cloud</groupId>

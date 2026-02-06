@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: video-processing-worker
+  namespace: fase5-video-processing-worker
+  labels:
+    app: video-processing-worker
+    component: worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: video-processing-worker
+  template:
+    metadata:
+      labels:
+        app: video-processing-worker
+        component: worker
+    spec:
+      serviceAccountName: video-processing-worker-sa
+      containers:
+      - name: video-processing-worker
+        image: 814147156565.dkr.ecr.us-east-1.amazonaws.com/fase5-video-processing-worker:latest
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "prod"
+        - name: ENVIRONMENT
+          value: "production"
+        - name: AWS_REGION
+          value: "us-east-1"
+        resources:
+          requests:
+            cpu: "500m"
+            memory: "512Mi"
