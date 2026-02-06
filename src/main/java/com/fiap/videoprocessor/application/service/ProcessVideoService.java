@@ -3,10 +3,14 @@ package com.fiap.videoprocessor.application.service;
 import com.fiap.videoprocessor.domain.exception.VideoProcessingException;
 import com.fiap.videoprocessor.domain.model.Frame;
 import com.fiap.videoprocessor.domain.model.ProcessingResult;
+import com.fiap.videoprocessor.domain.model.StatusEnum;
 import com.fiap.videoprocessor.domain.ports.input.ProcessVideoUseCase;
 import com.fiap.videoprocessor.domain.ports.output.FileCompressionPort;
+import com.fiap.videoprocessor.domain.ports.output.NotificationPort;
 import com.fiap.videoprocessor.domain.ports.output.VideoProcessorPort;
+import com.fiap.videoprocessor.domain.ports.output.VideoStatusPort;
 import com.fiap.videoprocessor.domain.ports.output.VideoStoragePort;
+import com.fiap.videoprocessor.infrastructure.messaging.model.VideoProcessingMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,12 +34,61 @@ public class ProcessVideoService implements ProcessVideoUseCase {
     private final VideoStoragePort videoStoragePort;
     private final VideoProcessorPort videoProcessorPort;
     private final FileCompressionPort fileCompressionPort;
+    private final VideoStatusPort videoStatusPort;
+    private final NotificationPort notificationPort;
     
     @Value("${video.processing.fps:1}")
     private int framesPerSecond;
     
     @Value("${video.processing.temp-dir:./temp}")
     private String tempDir;
+    
+    @Value("${s3.output-bucket:fase5-videos-processed}")
+    private String outputBucket;
+    
+    @Override
+    public void processVideo(VideoProcessingMessage message) {
+        String videoKey = message.getKey();
+        log.info("Iniciando processamento do vídeo: bucket={}, key={}, userId={}, videoId={}", 
+                message.getBucket(), videoKey, message.getUserId(), message.getVideoId());
+        
+        try {
+            // Atualizar status para "processing" no DynamoDB
+            videoStatusPort.updateStatusToProcessing(videoKey, message.getUserId(), message.getVideoId());
+            
+            // Processar vídeo
+            ProcessingResult result = process(
+                    message.getVideoId(), 
+                    videoKey, 
+                    message.getBucket(), 
+                    outputBucket
+            );
+            
+            // Atualizar status para "success" no DynamoDB
+            videoStatusPort.updateStatusToSuccess(videoKey, result.getZipS3Key());
+            
+            // Enviar notificação de sucesso
+            notificationPort.sendNotification(videoKey, message.getVideoId(), message.getUserId(), StatusEnum.PROCESSED);
+            
+            log.info("Vídeo processado e status atualizado com sucesso: {}", videoKey);
+            
+        } catch (Exception e) {
+            log.error("Erro ao processar vídeo: {}", e.getMessage(), e);
+            
+            // Atualizar status para "error" no DynamoDB
+            try {
+                videoStatusPort.updateStatusToError(videoKey, e.getMessage());
+                
+                // Enviar notificação de erro
+                notificationPort.sendNotification(videoKey, message.getVideoId(), message.getUserId(), StatusEnum.ERROR_PROCESSING);
+            } catch (Exception dbError) {
+                log.error("Erro adicional ao atualizar status de erro no DynamoDB: {}", dbError.getMessage());
+            }
+            
+            // Re-lançar exceção para que a mensagem retorne à fila
+            throw new VideoProcessingException("Erro ao processar vídeo: " + e.getMessage(), e);
+        }
+    }
     
     @Override
     public ProcessingResult process(String videoId, String s3Key, String inputBucket, String outputBucket) {

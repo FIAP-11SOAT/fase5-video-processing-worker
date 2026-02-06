@@ -1,6 +1,7 @@
 package com.fiap.videoprocessor.domain.ports.input;
 
 import com.fiap.videoprocessor.domain.model.ProcessingResult;
+import com.fiap.videoprocessor.infrastructure.messaging.model.VideoProcessingMessage;
 
 /**
  * Porta de entrada - Caso de uso principal para processar vídeos
@@ -16,4 +17,11 @@ public interface ProcessVideoUseCase {
      * @return Resultado do processamento
      */
     ProcessingResult process(String videoId, String s3Key, String inputBucket, String outputBucket);
+    
+    /**
+     * Processa um vídeo a partir de uma mensagem SQS
+     * 
+     * @param message Mensagem com informações do vídeo
+     */
+    void processVideo(VideoProcessingMessage message);
 }
