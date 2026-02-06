@@ -34,6 +34,10 @@ RUN mkdir -p /app/temp /app/logs && \
 # Trocar para usuário não-root
 USER appuser
 
+# Variáveis de ambiente para produção
+ENV SPRING_PROFILES_ACTIVE=prod
+ENV ENVIRONMENT=production
+
 # Expor porta
 EXPOSE 8080
 
