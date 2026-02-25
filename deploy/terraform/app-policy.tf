@@ -1,4 +1,20 @@
+data "aws_sqs_queue" "video_notification_queue" {
+  name = "fase5-video-notification-queue"
+}
+
 data "aws_iam_policy_document" "app_policy" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "sqs:SendMessage",
+      "sqs:GetQueueUrl",
+      "sqs:GetQueueAttributes"
+    ]
+    resources = [
+      data.aws_sqs_queue.video_notification_queue.arn
+    ]
+  }
+
   # Permissoes SQS
   statement {
     sid    = "SQSPermissions"

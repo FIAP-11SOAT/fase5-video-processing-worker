@@ -19,13 +19,24 @@ public class AwsConfig {
     
     @Value("${aws.region:us-east-1}")
     private String region;
-    
+
     @Value("${aws.access-key-id:}")
     private String accessKeyId;
-    
+
     @Value("${aws.secret-access-key:}")
     private String secretAccessKey;
-    
+
+    @Value("${spring.cloud.aws.sqs.endpoint}")
+    private String sqsEndpoint;
+
+    @Bean
+    public SqsAsyncClient sqsAsyncClient() {
+        return SqsAsyncClient.builder()
+                .region(Region.of(region))
+                .endpointOverride(URI.create(sqsEndpoint))
+                .build();
+    }
+
     @Bean
     public S3Client s3Client() {
         return S3Client.builder()
@@ -39,6 +50,13 @@ public class AwsConfig {
         return DynamoDbClient.builder()
                 .region(Region.of(region))
                 .credentialsProvider(credentialsProvider())
+                .build();
+    }
+
+    @Bean
+    public SqsTemplate sqsTemplate(SqsAsyncClient sqsAsyncClient) {
+        return SqsTemplate.builder()
+                .sqsAsyncClient(sqsAsyncClient)
                 .build();
     }
     
