@@ -2,14 +2,3 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: fase5-video-processing-worker
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: video-processing-worker-sa
-  namespace: fase5-video-processing-worker
-  annotations:
-    eks.amazonaws.com/role-arn: arn:aws:iam::814147156565:role/video-processing-worker-role
-  labels:
-    app: video-processing-worker
-    component: worker

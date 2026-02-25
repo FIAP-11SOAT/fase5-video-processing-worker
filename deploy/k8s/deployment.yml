@@ -19,7 +19,7 @@ spec:
         app: video-processing-worker
         component: worker
     spec:
-      serviceAccountName: video-processing-worker-sa
+      serviceAccountName: fase5-video-processing-worker-service-account
       containers:
       - name: video-processing-worker
         image: 814147156565.dkr.ecr.us-east-1.amazonaws.com/fase5-video-processing-worker:latest
@@ -30,6 +30,10 @@ spec:
           value: "production"
         - name: AWS_REGION
           value: "us-east-1"
+        - name: S3_BUCKET_NAME
+          value: "fase5-videos-to-process"
+        - name: S3_OUTPUT_BUCKET
+          value: "fase5-processed-frames"
         resources:
           requests:
             cpu: "500m"
