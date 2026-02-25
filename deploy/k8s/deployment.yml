@@ -8,6 +8,8 @@ metadata:
     component: worker
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: video-processing-worker

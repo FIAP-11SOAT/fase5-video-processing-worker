@@ -25,27 +25,20 @@ try {
     exit 1
 }
 
-# Fazer login no ECR
+# Verificar credenciais AWS (o docker-credential-ecr-login cuida do login automaticamente no push)
 Write-Host ""
-Write-Host "[2/5] Fazendo login no ECR..." -ForegroundColor Yellow
+Write-Host "[2/5] Verificando credenciais AWS para ECR..." -ForegroundColor Yellow
 try {
-    $password = aws ecr get-login-password --region $AWS_REGION
+    aws sts get-caller-identity --region $AWS_REGION | Out-Null
     if ($LASTEXITCODE -ne 0) {
-        throw "Erro ao obter senha do ECR"
+        throw "Credenciais AWS invalidas ou expiradas"
     }
-    
-    $password | docker login --username AWS --password-stdin "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com"
-    if ($LASTEXITCODE -ne 0) {
-        throw "Erro ao fazer login no Docker"
-    }
-    
-    Write-Host "Login no ECR realizado com sucesso" -ForegroundColor Green
+    Write-Host "Credenciais AWS validas - autenticacao ECR sera feita automaticamente pelo ecr-login helper" -ForegroundColor Green
 } catch {
-    Write-Host "Erro ao fazer login no ECR: $_" -ForegroundColor Red
+    Write-Host "Erro ao verificar credenciais AWS: $_" -ForegroundColor Red
     Write-Host "Certifique-se de que:" -ForegroundColor Yellow
     Write-Host "  - AWS CLI esta instalado e configurado (aws configure)" -ForegroundColor Yellow
     Write-Host "  - Voce tem permissoes para acessar o ECR" -ForegroundColor Yellow
-    Write-Host "  - O repositorio ECR existe" -ForegroundColor Yellow
     exit 1
 }
 

@@ -132,17 +132,4 @@ resource "aws_iam_role_policy_attachment" "video_processing_worker" {
   policy_arn = aws_iam_policy.video_processing_worker.arn
 }
 
-# Kubernetes Service Account com annotation da IAM Role
-resource "kubernetes_service_account" "video_processing_worker" {
-  metadata {
-    name      = var.service_account_name
-    namespace = var.namespace
-    annotations = {
-      "eks.amazonaws.com/role-arn" = aws_iam_role.video_processing_worker.arn
-    }
-    labels = {
-      app       = "video-processing-worker"
-      component = "worker"
-    }
-  }
-}
+# Kubernetes Service Account gerenciado via manifesto K8s (deploy/k8s/namespace.yml)
