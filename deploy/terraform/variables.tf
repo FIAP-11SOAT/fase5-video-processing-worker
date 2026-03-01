@@ -1,56 +1,3 @@
-variable "aws_region" {
-  description = "AWS Region"
-  type        = string
-  default     = "us-east-1"
-}
-
-variable "cluster_name" {
-  description = "Nome do cluster EKS"
-  type        = string
-}
-
-variable "namespace" {
-  description = "Namespace do Kubernetes"
-  type        = string
-  default     = "fase5-video-processing-worker"
-}
-
-variable "service_account_name" {
-  description = "Nome do Service Account"
-  type        = string
-  default     = "video-processing-worker-sa"
-}
-
-variable "sqs_queue_name" {
-  description = "Nome da fila SQS"
-  type        = string
-  default     = "fase5-video-processing-queue"
-}
-
-variable "s3_bucket_name" {
-  description = "Nome do bucket S3 de entrada (videos originais)"
-  type        = string
-}
-
-variable "s3_output_bucket_name" {
-  description = "Nome do bucket S3 de saida (frames processados)"
-  type        = string
-  default     = "fase5-processed-frames"
-}
-
-variable "dynamodb_table_name" {
-  description = "Nome da tabela DynamoDB"
-  type        = string
-  default     = "fase5-video-status"
-}
-
-variable "sns_topic_arn" {
-  description = "ARN do topico SNS para notificacoes (opcional)"
-  type        = string
-  default     = ""
-}
-
-
 data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
 data "aws_ecr_authorization_token" "ecr_auth" {}
@@ -76,6 +23,12 @@ locals {
   aws_infra_secrets           = jsondecode(data.aws_secretsmanager_secret_version.infra_secrets.secret_string)
   aws_master_secrets          = jsondecode(data.aws_secretsmanager_secret_version.master_secrets.secret_string)
   aws_ecr_auth_proxy_endpoint = replace(data.aws_ecr_authorization_token.ecr_auth.proxy_endpoint, "https://", "")
+}
+
+variable "aws_region" {
+  description = "The AWS region to deploy resources in"
+  type        = string
+  default     = "us-east-1"
 }
 
 variable "project_name" {
