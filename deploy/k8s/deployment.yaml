@@ -22,7 +22,7 @@ spec:
       serviceAccountName: fase5-video-processing-worker-service-account
       containers:
       - name: video-processing-worker
-        image: 814147156565.dkr.ecr.us-east-1.amazonaws.com/fase5-video-processing-worker:latest
+        image: 814147156565.dkr.ecr.us-east-1.amazonaws.com/fase5-video-processing-worker-ecr:latest
         env:
         - name: SPRING_PROFILES_ACTIVE
           value: "prod"

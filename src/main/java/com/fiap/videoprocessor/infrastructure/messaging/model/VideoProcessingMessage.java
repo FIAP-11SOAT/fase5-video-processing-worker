@@ -17,5 +17,6 @@ public class VideoProcessingMessage {
     private String key;
     private String userId;
     private String videoId;
+    private String videoName;
     private Long size;
 }

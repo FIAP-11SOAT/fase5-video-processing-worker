@@ -269,4 +269,27 @@ public class S3StorageAdapter implements VideoStoragePort {
             throw new VideoProcessingException("Erro ao verificar arquivo no S3", e);
         }
     }
+    
+    /**
+     * Busca os metadados de um objeto no S3
+     */
+    public java.util.Map<String, String> getObjectMetadata(String bucket, String key) {
+        log.info("Buscando metadados do objeto S3: bucket={}, key={}", bucket, key);
+        
+        try {
+            HeadObjectRequest headObjectRequest = HeadObjectRequest.builder()
+                    .bucket(bucket)
+                    .key(key)
+                    .build();
+            
+            HeadObjectResponse response = s3Client.headObject(headObjectRequest);
+            
+            log.debug("Metadados obtidos: {}", response.metadata());
+            return response.metadata();
+            
+        } catch (S3Exception e) {
+            log.error("Erro ao buscar metadados do objeto S3: {}", e.awsErrorDetails().errorMessage());
+            throw new VideoProcessingException("Erro ao buscar metadados do objeto S3", e);
+        }
+    }
 }

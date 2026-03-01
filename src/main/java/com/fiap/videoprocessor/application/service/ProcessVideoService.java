@@ -67,8 +67,8 @@ public class ProcessVideoService implements ProcessVideoUseCase {
             // Atualizar status para "success" no DynamoDB
             videoStatusPort.updateStatusToSuccess(videoKey, result.getZipS3Key());
             
-            // Enviar notificação de sucesso
-            notificationPort.sendNotification(videoKey, message.getVideoId(), message.getUserId(), StatusEnum.PROCESSED);
+            // Enviar notificação de sucesso com o nome real do vídeo
+            notificationPort.sendNotification(videoKey, message.getVideoName(), message.getUserId(), StatusEnum.PROCESSED);
             
             log.info("Vídeo processado e status atualizado com sucesso: {}", videoKey);
             
@@ -79,8 +79,8 @@ public class ProcessVideoService implements ProcessVideoUseCase {
             try {
                 videoStatusPort.updateStatusToError(videoKey, e.getMessage());
                 
-                // Enviar notificação de erro
-                notificationPort.sendNotification(videoKey, message.getVideoId(), message.getUserId(), StatusEnum.ERROR_PROCESSING);
+                // Enviar notificação de erro com o nome real do vídeo
+                notificationPort.sendNotification(videoKey, message.getVideoName(), message.getUserId(), StatusEnum.ERROR_PROCESSING);
             } catch (Exception dbError) {
                 log.error("Erro adicional ao atualizar status de erro no DynamoDB: {}", dbError.getMessage());
             }

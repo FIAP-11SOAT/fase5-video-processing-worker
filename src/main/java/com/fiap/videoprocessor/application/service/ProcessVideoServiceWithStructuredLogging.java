@@ -78,8 +78,8 @@ public class ProcessVideoServiceWithStructuredLogging implements ProcessVideoUse
             // Atualizar status para "success"
             videoStatusPort.updateStatusToSuccess(videoKey, result.getZipS3Key());
             
-            // Enviar notificação de sucesso
-            notificationPort.sendNotification(videoKey, message.getVideoId(), message.getUserId(), StatusEnum.PROCESSED);
+            // Enviar notificação de sucesso com o nome real do vídeo
+            notificationPort.sendNotification(videoKey, message.getVideoName(), message.getUserId(), StatusEnum.PROCESSED);
             
             // ✅ BOM: Log de sucesso com métricas
             log.info("Video processed successfully", 
@@ -105,7 +105,8 @@ public class ProcessVideoServiceWithStructuredLogging implements ProcessVideoUse
             
             try {
                 videoStatusPort.updateStatusToError(videoKey, e.getMessage());
-                notificationPort.sendNotification(videoKey, message.getVideoId(), message.getUserId(), StatusEnum.ERROR_PROCESSING);
+                // Enviar notificação de erro com o nome real do vídeo
+                notificationPort.sendNotification(videoKey, message.getVideoName(), message.getUserId(), StatusEnum.ERROR_PROCESSING);
             } catch (Exception dbError) {
                 log.error("Failed to update error status", 
                         keyValue("videoKey", videoKey),
