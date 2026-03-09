@@ -1,5 +1,6 @@
 package com.fiap.videoprocessor.infrastructure.messaging;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fiap.videoprocessor.domain.model.StatusEnum;
 import com.fiap.videoprocessor.domain.ports.output.NotificationPort;
@@ -45,8 +46,10 @@ public class SqsNotificationAdapter implements NotificationPort {
             
             log.info("Notificação enviada com sucesso para a fila: {}", notificationQueueName);
             
-        } catch (Exception e) {
-            log.error("Erro ao enviar notificação: {}", e.getMessage(), e);
+        } catch (JsonProcessingException e) {
+            log.error("Erro ao serializar mensagem de notificação: {}", e.getMessage(), e);
+        } catch (RuntimeException e) {
+            log.error("Erro ao enviar notificação para a fila: {}", e.getMessage(), e);
             // Não lançar exceção para não interromper o fluxo principal
         }
     }

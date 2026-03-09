@@ -13,6 +13,7 @@ import software.amazon.awssdk.services.dynamodb.model.*;
 
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -24,6 +25,8 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Slf4j
 public class DynamoDbAdapter implements VideoStatusPort {
+    
+    private static final String DYNAMODB_UPDATE_ERROR_MSG = "Erro ao atualizar status no DynamoDB: {}";
     
     private final DynamoDbClient dynamoDbClient;
     
@@ -60,7 +63,7 @@ public class DynamoDbAdapter implements VideoStatusPort {
         } catch (ConditionalCheckFailedException e) {
             log.warn("Registro não encontrado no DynamoDB para atualizar: videoId={}, userId={}", videoId, userId);
         } catch (DynamoDbException e) {
-            log.error("Erro ao atualizar status no DynamoDB: {}", e.getMessage());
+            log.error(DYNAMODB_UPDATE_ERROR_MSG, e.getMessage());
             throw new VideoProcessingException("Erro ao atualizar status no DynamoDB", e);
         }
     }
@@ -104,7 +107,7 @@ public class DynamoDbAdapter implements VideoStatusPort {
         } catch (ConditionalCheckFailedException e) {
             log.warn("Registro não encontrado no DynamoDB para atualizar: videoKey={}", videoKey);
         } catch (DynamoDbException e) {
-            log.error("Erro ao atualizar status no DynamoDB: {}", e.getMessage());
+            log.error(DYNAMODB_UPDATE_ERROR_MSG, e.getMessage());
             throw new VideoProcessingException("Erro ao atualizar status no DynamoDB", e);
         }
     }
@@ -148,7 +151,7 @@ public class DynamoDbAdapter implements VideoStatusPort {
         } catch (ConditionalCheckFailedException e) {
             log.warn("Registro não encontrado no DynamoDB para atualizar: videoKey={}", videoKey);
         } catch (DynamoDbException e) {
-            log.error("Erro ao atualizar status no DynamoDB: {}", e.getMessage());
+            log.error(DYNAMODB_UPDATE_ERROR_MSG, e.getMessage());
             // Não lançar exceção aqui para não mascarar o erro original
             log.warn("Continuando processamento apesar do erro no DynamoDB");
         }
@@ -218,7 +221,7 @@ public class DynamoDbAdapter implements VideoStatusPort {
         }
         try {
             return OffsetDateTime.parse(dateTimeStr, DateTimeFormatter.ISO_OFFSET_DATE_TIME);
-        } catch (Exception e) {
+        } catch (DateTimeParseException e) {
             log.warn("Erro ao parsear data: {}", dateTimeStr);
             return null;
         }

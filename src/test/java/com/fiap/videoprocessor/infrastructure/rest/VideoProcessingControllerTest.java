@@ -1,6 +1,7 @@
 package com.fiap.videoprocessor.infrastructure.rest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fiap.videoprocessor.domain.exception.VideoProcessingException;
 import com.fiap.videoprocessor.domain.model.Frame;
 import com.fiap.videoprocessor.domain.model.ProcessingResult;
 import com.fiap.videoprocessor.domain.ports.input.ProcessVideoUseCase;
@@ -88,7 +89,7 @@ class VideoProcessingControllerTest {
     @Test
     void processVideo_deveRetornar500QuandoUseCase_lancaExcecao() throws Exception {
         when(processVideoUseCase.process(anyString(), anyString(), anyString(), anyString()))
-                .thenThrow(new RuntimeException("Falha inesperada"));
+                .thenThrow(new VideoProcessingException("Falha inesperada"));
 
         String requestBody = """
                 {

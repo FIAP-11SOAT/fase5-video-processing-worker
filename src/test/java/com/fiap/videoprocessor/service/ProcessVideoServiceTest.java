@@ -52,7 +52,7 @@ class ProcessVideoServiceTest {
     void setUp() {
         ReflectionTestUtils.setField(processVideoService, "framesPerSecond", 1);
         ReflectionTestUtils.setField(processVideoService, "tempDir", "./temp-test");
-        ReflectionTestUtils.setField(processVideoService, "outputBucket", "test-output-bucket");
+        ReflectionTestUtils.setField(processVideoService, "defaultOutputBucket", "test-output-bucket");
     }
 
     /**
@@ -76,6 +76,7 @@ class ProcessVideoServiceTest {
                 .key("user123/video456.mp4")
                 .userId("user123")
                 .videoId("video456")
+                .videoName("video456")
                 .build();
 
         Frame frame = Frame.builder()
@@ -108,6 +109,7 @@ class ProcessVideoServiceTest {
                 .key("user123/video456.mp4")
                 .userId("user123")
                 .videoId("video456")
+                .videoName("video456")
                 .build();
 
         when(videoProcessorPort.extractFrames(any(Path.class), any(Path.class), anyInt()))

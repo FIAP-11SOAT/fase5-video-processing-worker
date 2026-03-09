@@ -1,6 +1,7 @@
 package com.fiap.videoprocessor.infrastructure.messaging;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fiap.videoprocessor.domain.exception.VideoProcessingException;
 import com.fiap.videoprocessor.domain.model.VideoDynamoModel;
 import com.fiap.videoprocessor.domain.ports.input.ProcessVideoUseCase;
 import com.fiap.videoprocessor.domain.ports.output.VideoStatusPort;
@@ -47,7 +48,7 @@ public class VideoProcessingListener {
         } catch (Exception e) {
             log.error("Erro ao processar mensagem da fila: {}", e.getMessage(), e);
             // A mensagem será retornada para a fila após visibility timeout
-            throw new RuntimeException("Erro ao processar mensagem", e);
+            throw new VideoProcessingException("Erro ao processar mensagem", e);
         }
     }
     
@@ -112,7 +113,7 @@ public class VideoProcessingListener {
             
         } catch (Exception e) {
             log.error("Erro ao processar record: {}", e.getMessage(), e);
-            throw new RuntimeException("Erro ao processar record", e);
+            throw new VideoProcessingException("Erro ao processar record", e);
         }
     }
 }

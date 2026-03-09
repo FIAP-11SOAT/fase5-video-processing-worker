@@ -1,5 +1,6 @@
 package com.fiap.videoprocessor.infrastructure.adapter.rest;
 
+import com.fiap.videoprocessor.domain.exception.VideoProcessingException;
 import com.fiap.videoprocessor.domain.model.ProcessingResult;
 import com.fiap.videoprocessor.domain.ports.input.ProcessVideoUseCase;
 import lombok.RequiredArgsConstructor;
@@ -44,7 +45,7 @@ public class VideoProcessingController {
             ProcessingResponse response = ProcessingResponse.fromDomain(result);
             return ResponseEntity.ok(response);
             
-        } catch (Exception e) {
+        } catch (VideoProcessingException e) {
             log.error("Erro ao processar vídeo", e);
             
             ProcessingResponse errorResponse = new ProcessingResponse(

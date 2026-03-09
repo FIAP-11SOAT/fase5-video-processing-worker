@@ -44,7 +44,7 @@ public class ProcessVideoService implements ProcessVideoUseCase {
     private String tempDir;
     
     @Value("${s3.output-bucket:fase5-videos-processed}")
-    private String outputBucket;
+    private String defaultOutputBucket;
     
     @Override
     public void processVideo(VideoProcessingMessage message) {
@@ -61,7 +61,7 @@ public class ProcessVideoService implements ProcessVideoUseCase {
                     message.getVideoId(), 
                     videoKey, 
                     message.getBucket(), 
-                    outputBucket
+                    defaultOutputBucket
             );
             
             // Atualizar status para "success" no DynamoDB

@@ -98,12 +98,14 @@ public class FFmpegVideoProcessorAdapter implements VideoProcessorPort {
             ProcessBuilder processBuilder = new ProcessBuilder("ffmpeg", "-version");
             Process process = processBuilder.start();
             int exitCode = process.waitFor();
-            
             if (exitCode != 0) {
                 throw new VideoProcessingException("FFmpeg não está instalado ou não está no PATH");
             }
-        } catch (IOException | InterruptedException e) {
+        } catch (IOException e) {
             throw new VideoProcessingException("Erro ao verificar instalação do FFmpeg: " + e.getMessage(), e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new VideoProcessingException("Verificação do FFmpeg foi interrompida: " + e.getMessage(), e);
         }
     }
     
