@@ -245,7 +245,7 @@ public class S3StorageAdapter implements VideoStoragePort {
                         .uploadId(uploadId)
                         .build();
                 s3Client.abortMultipartUpload(abortRequest);
-            } catch (Exception e) {
+            } catch (S3Exception e) {
                 log.error("Erro ao abortar multipart upload", e);
             }
         }

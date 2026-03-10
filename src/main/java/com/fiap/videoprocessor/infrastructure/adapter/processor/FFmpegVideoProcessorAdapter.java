@@ -110,7 +110,7 @@ public class FFmpegVideoProcessorAdapter implements VideoProcessorPort {
     }
     
     private void logFFmpegOutput(Process process) {
-        new Thread(() -> {
+        Thread readerThread = new Thread(() -> {
             try (BufferedReader reader = new BufferedReader(
                     new InputStreamReader(process.getInputStream()))) {
                 String line;
@@ -120,7 +120,10 @@ public class FFmpegVideoProcessorAdapter implements VideoProcessorPort {
             } catch (IOException e) {
                 log.warn("Erro ao ler output do FFmpeg", e);
             }
-        }).start();
+        });
+        readerThread.setName("ffmpeg-output-reader");
+        readerThread.setDaemon(true);
+        readerThread.start();
     }
     
     private int extractFrameNumber(String fileName) {

@@ -72,7 +72,7 @@ public class ProcessVideoService implements ProcessVideoUseCase {
             
             log.info("Vídeo processado e status atualizado com sucesso: {}", videoKey);
             
-        } catch (Exception e) {
+        } catch (VideoProcessingException e) {
             log.error("Erro ao processar vídeo: {}", e.getMessage(), e);
             
             // Atualizar status para "error" no DynamoDB
@@ -81,11 +81,22 @@ public class ProcessVideoService implements ProcessVideoUseCase {
                 
                 // Enviar notificação de erro com o nome real do vídeo
                 notificationPort.sendNotification(videoKey, message.getVideoName(), message.getUserId(), StatusEnum.ERROR_PROCESSING);
-            } catch (Exception dbError) {
+            } catch (RuntimeException dbError) {
                 log.error("Erro adicional ao atualizar status de erro no DynamoDB: {}", dbError.getMessage());
             }
             
             // Re-lançar exceção para que a mensagem retorne à fila
+            throw e;
+        } catch (RuntimeException e) {
+            log.error("Erro inesperado ao processar vídeo: {}", e.getMessage(), e);
+            
+            try {
+                videoStatusPort.updateStatusToError(videoKey, e.getMessage());
+                notificationPort.sendNotification(videoKey, message.getVideoName(), message.getUserId(), StatusEnum.ERROR_PROCESSING);
+            } catch (RuntimeException dbError) {
+                log.error("Erro adicional ao atualizar status de erro no DynamoDB: {}", dbError.getMessage());
+            }
+            
             throw new VideoProcessingException("Erro ao processar vídeo: " + e.getMessage(), e);
         }
     }
@@ -182,8 +193,11 @@ public class ProcessVideoService implements ProcessVideoUseCase {
             log.info("Processamento concluído com sucesso em {}ms", processingTime);
             return result;
             
-        } catch (Exception e) {
+        } catch (VideoProcessingException e) {
             log.error("Erro ao processar vídeo: {}", e.getMessage(), e);
+            throw e;
+        } catch (IOException e) {
+            log.error("Erro de I/O ao processar vídeo: {}", e.getMessage(), e);
             throw new VideoProcessingException("Erro ao processar vídeo: " + e.getMessage(), e);
         } finally {
             // Limpar diretório temporário

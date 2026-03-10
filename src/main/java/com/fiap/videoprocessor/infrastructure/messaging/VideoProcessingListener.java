@@ -1,5 +1,6 @@
 package com.fiap.videoprocessor.infrastructure.messaging;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fiap.videoprocessor.domain.exception.VideoProcessingException;
 import com.fiap.videoprocessor.domain.model.VideoDynamoModel;
@@ -45,10 +46,13 @@ public class VideoProcessingListener {
                 processRecord(record);
             }
             
-        } catch (Exception e) {
+        } catch (VideoProcessingException e) {
             log.error("Erro ao processar mensagem da fila: {}", e.getMessage(), e);
+            throw e;
+        } catch (JsonProcessingException e) {
+            log.error("Erro ao deserializar mensagem da fila: {}", e.getMessage(), e);
             // A mensagem será retornada para a fila após visibility timeout
-            throw new VideoProcessingException("Erro ao processar mensagem", e);
+            throw new VideoProcessingException("Erro ao deserializar mensagem", e);
         }
     }
     
@@ -89,6 +93,8 @@ public class VideoProcessingListener {
                 } else {
                     log.warn("Vídeo não encontrado no DynamoDB. Usando username como fallback: {}", username);
                 }
+            } catch (VideoProcessingException e) {
+                throw e;
             } catch (Exception e) {
                 log.error("Erro ao buscar vídeo no DynamoDB. Usando username como fallback: {}", username, e);
             }
@@ -111,9 +117,12 @@ public class VideoProcessingListener {
             
             log.info("Vídeo processado com sucesso: {}", key);
             
-        } catch (Exception e) {
+        } catch (VideoProcessingException e) {
             log.error("Erro ao processar record: {}", e.getMessage(), e);
-            throw new VideoProcessingException("Erro ao processar record", e);
+            throw e;
+        } catch (IllegalArgumentException e) {
+            log.error("Formato inválido ao processar record: {}", e.getMessage(), e);
+            throw new VideoProcessingException("Formato inválido no record", e);
         }
     }
 }
