@@ -1,4 +1,4 @@
-﻿package com.fiap.videoprocessor.infrastructure.adapter.processor;
+package com.fiap.videoprocessor.infrastructure.adapter.processor;
 
 import com.fiap.videoprocessor.domain.exception.VideoProcessingException;
 import com.fiap.videoprocessor.domain.model.Frame;
