@@ -174,6 +174,21 @@ class DynamoDbAdapterTest {
         dynamoDbAdapter.updateStatusToError("user1/videoId1.mp4", "error occurred");
     }
 
+    @Test
+    void updateStatusToError_deveIgnorar_quandoCondicaoDeFalhaNaVerificacao() {
+        Map<String, AttributeValue> item = Map.of(
+                "id", AttributeValue.builder().s("videoId1").build(),
+                "userId", AttributeValue.builder().s("user1").build()
+        );
+        QueryResponse queryResponse = QueryResponse.builder().items(List.of(item)).build();
+        when(dynamoDbClient.query(any(QueryRequest.class))).thenReturn(queryResponse);
+        when(dynamoDbClient.updateItem(any(UpdateItemRequest.class)))
+                .thenThrow(ConditionalCheckFailedException.builder().message("cond failed").build());
+
+        // Should not throw — swallowed like DynamoDbException
+        dynamoDbAdapter.updateStatusToError("user1/videoId1.mp4", "error occurred");
+    }
+
     // --- findByVideoKey ---
 
     @Test

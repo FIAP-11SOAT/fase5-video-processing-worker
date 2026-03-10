@@ -41,12 +41,12 @@ public class S3StorageAdapter implements VideoStoragePort {
                     .bucket(bucket)
                     .key(key)
                     .build();
-            
-            ResponseInputStream<GetObjectResponse> response = s3Client.getObject(getObjectRequest);
-            
-            Files.createDirectories(destinationPath.getParent());
-            Files.copy(response, destinationPath, StandardCopyOption.REPLACE_EXISTING);
-            
+
+            try (ResponseInputStream<GetObjectResponse> response = s3Client.getObject(getObjectRequest)) {
+                Files.createDirectories(destinationPath.getParent());
+                Files.copy(response, destinationPath, StandardCopyOption.REPLACE_EXISTING);
+            }
+
             log.info("Arquivo baixado com sucesso: {}", destinationPath);
             return destinationPath;
             

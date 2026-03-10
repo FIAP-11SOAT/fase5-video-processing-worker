@@ -20,44 +20,36 @@ import java.util.stream.Stream;
  */
 @Component
 @Slf4j
+@SuppressWarnings("java:S4721") // FFmpeg command execution is intentional and input paths are internally controlled
 public class FFmpegVideoProcessorAdapter implements VideoProcessorPort {
-    
+
     private static final String FRAME_PATTERN = "frame_%04d.png";
-    
+
     @Override
     public List<Frame> extractFrames(Path videoPath, Path outputDir, int framesPerSecond) {
-        log.info("Extraindo frames: video={}, fps={}, output={}", 
+        log.info("Extraindo frames: video={}, fps={}, output={}",
                 videoPath, framesPerSecond, outputDir);
-        
+
         validateFFmpegInstalled();
-        
+
         try {
             Files.createDirectories(outputDir);
-            
+
             String framePattern = outputDir.resolve(FRAME_PATTERN).toString();
-            
-            // Comando FFmpeg para extrair frames
-            ProcessBuilder processBuilder = new ProcessBuilder(
+
+            int exitCode = runProcess(
                     "ffmpeg",
                     "-i", videoPath.toString(),
                     "-vf", String.format("fps=%d", framesPerSecond),
-                    "-y", // Sobrescrever arquivos existentes
+                    "-y",
                     framePattern
             );
-            
-            processBuilder.redirectErrorStream(true);
-            Process process = processBuilder.start();
-            
-            // Capturar output do FFmpeg
-            logFFmpegOutput(process);
-            
-            int exitCode = process.waitFor();
-            
+
             if (exitCode != 0) {
                 throw new VideoProcessingException(
                         String.format("FFmpeg falhou com código de saída: %d", exitCode));
             }
-            
+
             // Listar frames extraídos
             List<Frame> frames = new ArrayList<>();
             try (Stream<Path> paths = Files.list(outputDir)) {
@@ -67,24 +59,24 @@ public class FFmpegVideoProcessorAdapter implements VideoProcessorPort {
                             try {
                                 byte[] data = Files.readAllBytes(framePath);
                                 int frameNumber = extractFrameNumber(framePath.getFileName().toString());
-                                
+
                                 Frame frame = Frame.builder()
                                         .fileName(framePath.getFileName().toString())
                                         .frameNumber(frameNumber)
                                         .data(data)
                                         .sizeInBytes(data.length)
                                         .build();
-                                
+
                                 frames.add(frame);
                             } catch (IOException e) {
                                 log.warn("Erro ao ler frame: {}", framePath, e);
                             }
                         });
             }
-            
+
             log.info("Frames extraídos com sucesso: {} frames", frames.size());
             return frames;
-            
+
         } catch (IOException e) {
             throw new VideoProcessingException("Erro ao executar FFmpeg", e);
         } catch (InterruptedException e) {
@@ -92,12 +84,10 @@ public class FFmpegVideoProcessorAdapter implements VideoProcessorPort {
             throw new VideoProcessingException("Processamento interrompido", e);
         }
     }
-    
+
     private void validateFFmpegInstalled() {
         try {
-            ProcessBuilder processBuilder = new ProcessBuilder("ffmpeg", "-version");
-            Process process = processBuilder.start();
-            int exitCode = process.waitFor();
+            int exitCode = runProcess("ffmpeg", "-version");
             if (exitCode != 0) {
                 throw new VideoProcessingException("FFmpeg não está instalado ou não está no PATH");
             }
@@ -108,7 +98,22 @@ public class FFmpegVideoProcessorAdapter implements VideoProcessorPort {
             throw new VideoProcessingException("Verificação do FFmpeg foi interrompida: " + e.getMessage(), e);
         }
     }
-    
+
+    /**
+     * Executes a process and returns its exit code. Protected to allow overriding in tests.
+     */
+    protected int runProcess(String... command) throws IOException, InterruptedException {
+        ProcessBuilder pb = new ProcessBuilder(command);
+        pb.redirectErrorStream(true);
+        Process process = pb.start();
+        logFFmpegOutput(process);
+        try {
+            return process.waitFor();
+        } finally {
+            process.destroyForcibly();
+        }
+    }
+
     private void logFFmpegOutput(Process process) {
         Thread readerThread = new Thread(() -> {
             try (BufferedReader reader = new BufferedReader(
@@ -125,7 +130,7 @@ public class FFmpegVideoProcessorAdapter implements VideoProcessorPort {
         readerThread.setDaemon(true);
         readerThread.start();
     }
-    
+
     private int extractFrameNumber(String fileName) {
         // Extrai número do frame de nomes como "frame_0001.png"
         try {
