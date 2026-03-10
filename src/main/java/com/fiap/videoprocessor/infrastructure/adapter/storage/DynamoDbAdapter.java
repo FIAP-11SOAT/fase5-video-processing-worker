@@ -27,6 +27,12 @@ import java.util.Optional;
 public class DynamoDbAdapter implements VideoStatusPort {
     
     private static final String DYNAMODB_UPDATE_ERROR_MSG = "Erro ao atualizar status no DynamoDB: {}";
+    private static final String CONDITION_EXISTS = "attribute_exists(id) AND attribute_exists(userId)";
+    private static final String EXPR_STATUS = ":status";
+    private static final String EXPR_UPDATED_AT = ":updatedAt";
+    private static final String ATTR_STATUS = "#status";
+    private static final String STATUS_FIELD = "status";
+    private static final String USER_ID_FIELD = "userId";
     
     private final DynamoDbClient dynamoDbClient;
     
@@ -41,19 +47,19 @@ public class DynamoDbAdapter implements VideoStatusPort {
             // Agora usamos id (videoId) e userId como chave composta
             Map<String, AttributeValue> key = new HashMap<>();
             key.put("id", AttributeValue.builder().s(videoId).build());
-            key.put("userId", AttributeValue.builder().s(userId).build());
+            key.put(USER_ID_FIELD, AttributeValue.builder().s(userId).build());
             
             Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
-            expressionAttributeValues.put(":status", AttributeValue.builder().s(StatusEnum.UPLOADED.getValue()).build());
-            expressionAttributeValues.put(":updatedAt", AttributeValue.builder()
+            expressionAttributeValues.put(EXPR_STATUS, AttributeValue.builder().s(StatusEnum.UPLOADED.getValue()).build());
+            expressionAttributeValues.put(EXPR_UPDATED_AT, AttributeValue.builder()
                     .s(OffsetDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)).build());
             
             UpdateItemRequest request = UpdateItemRequest.builder()
                     .tableName(tableName)
                     .key(key)
                     .updateExpression("SET #status = :status, updatedAt = :updatedAt")
-                    .conditionExpression("attribute_exists(id) AND attribute_exists(userId)")
-                    .expressionAttributeNames(Map.of("#status", "status"))
+                    .conditionExpression(CONDITION_EXISTS)
+                    .expressionAttributeNames(Map.of(ATTR_STATUS, STATUS_FIELD))
                     .expressionAttributeValues(expressionAttributeValues)
                     .build();
             
@@ -84,11 +90,11 @@ public class DynamoDbAdapter implements VideoStatusPort {
             
             Map<String, AttributeValue> key = new HashMap<>();
             key.put("id", AttributeValue.builder().s(video.getId()).build());
-            key.put("userId", AttributeValue.builder().s(video.getUserId()).build());
+            key.put(USER_ID_FIELD, AttributeValue.builder().s(video.getUserId()).build());
             
             Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
-            expressionAttributeValues.put(":status", AttributeValue.builder().s(StatusEnum.PROCESSED.getValue()).build());
-            expressionAttributeValues.put(":updatedAt", AttributeValue.builder()
+            expressionAttributeValues.put(EXPR_STATUS, AttributeValue.builder().s(StatusEnum.PROCESSED.getValue()).build());
+            expressionAttributeValues.put(EXPR_UPDATED_AT, AttributeValue.builder()
                     .s(OffsetDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)).build());
             expressionAttributeValues.put(":processedKey", AttributeValue.builder().s(processedVideoKey).build());
             
@@ -96,8 +102,8 @@ public class DynamoDbAdapter implements VideoStatusPort {
                     .tableName(tableName)
                     .key(key)
                     .updateExpression("SET #status = :status, updatedAt = :updatedAt, processedVideoKey = :processedKey")
-                    .conditionExpression("attribute_exists(id) AND attribute_exists(userId)")
-                    .expressionAttributeNames(Map.of("#status", "status"))
+                    .conditionExpression(CONDITION_EXISTS)
+                    .expressionAttributeNames(Map.of(ATTR_STATUS, STATUS_FIELD))
                     .expressionAttributeValues(expressionAttributeValues)
                     .build();
             
@@ -128,11 +134,11 @@ public class DynamoDbAdapter implements VideoStatusPort {
             
             Map<String, AttributeValue> key = new HashMap<>();
             key.put("id", AttributeValue.builder().s(video.getId()).build());
-            key.put("userId", AttributeValue.builder().s(video.getUserId()).build());
+            key.put(USER_ID_FIELD, AttributeValue.builder().s(video.getUserId()).build());
             
             Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
-            expressionAttributeValues.put(":status", AttributeValue.builder().s(StatusEnum.ERROR_PROCESSING.getValue()).build());
-            expressionAttributeValues.put(":updatedAt", AttributeValue.builder()
+            expressionAttributeValues.put(EXPR_STATUS, AttributeValue.builder().s(StatusEnum.ERROR_PROCESSING.getValue()).build());
+            expressionAttributeValues.put(EXPR_UPDATED_AT, AttributeValue.builder()
                     .s(OffsetDateTime.now().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)).build());
             expressionAttributeValues.put(":errorMessage", AttributeValue.builder().s(errorMessage).build());
             
@@ -140,8 +146,8 @@ public class DynamoDbAdapter implements VideoStatusPort {
                     .tableName(tableName)
                     .key(key)
                     .updateExpression("SET #status = :status, updatedAt = :updatedAt, errorMessage = :errorMessage")
-                    .conditionExpression("attribute_exists(id) AND attribute_exists(userId)")
-                    .expressionAttributeNames(Map.of("#status", "status"))
+                    .conditionExpression(CONDITION_EXISTS)
+                    .expressionAttributeNames(Map.of(ATTR_STATUS, STATUS_FIELD))
                     .expressionAttributeValues(expressionAttributeValues)
                     .build();
             
@@ -193,9 +199,9 @@ public class DynamoDbAdapter implements VideoStatusPort {
             VideoDynamoModel model = VideoDynamoModel.builder()
                     .videoKey(getStringAttribute(item, "videoKey"))
                     .id(getStringAttribute(item, "id"))
-                    .userId(getStringAttribute(item, "userId"))
+                    .userId(getStringAttribute(item, USER_ID_FIELD))
                     .name(getStringAttribute(item, "name"))
-                    .status(getStringAttribute(item, "status"))
+                    .status(getStringAttribute(item, STATUS_FIELD))
                     .createdAt(parseDateTime(getStringAttribute(item, "createdAt")))
                     .updatedAt(parseDateTime(getStringAttribute(item, "updatedAt")))
                     .errorMessage(getStringAttribute(item, "errorMessage"))

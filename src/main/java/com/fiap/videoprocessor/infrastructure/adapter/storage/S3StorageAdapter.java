@@ -26,7 +26,9 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 public class S3StorageAdapter implements VideoStoragePort {
-    
+
+    private static final String CONTENT_TYPE_ZIP = "application/zip";
+
     private final S3Client s3Client;
     
     @Value("${s3.multipart.part-size:10485760}") // 10MB padrão
@@ -85,7 +87,7 @@ public class S3StorageAdapter implements VideoStoragePort {
             PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                     .bucket(bucket)
                     .key(key)
-                    .contentType("application/zip")
+                    .contentType(CONTENT_TYPE_ZIP)
                     .build();
             
             s3Client.putObject(putObjectRequest, RequestBody.fromFile(filePath));
@@ -120,7 +122,7 @@ public class S3StorageAdapter implements VideoStoragePort {
             PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                     .bucket(bucket)
                     .key(key)
-                    .contentType("application/zip")
+                    .contentType(CONTENT_TYPE_ZIP)
                     .contentLength(contentLength)
                     .build();
             
@@ -154,7 +156,7 @@ public class S3StorageAdapter implements VideoStoragePort {
             CreateMultipartUploadRequest createRequest = CreateMultipartUploadRequest.builder()
                     .bucket(bucket)
                     .key(key)
-                    .contentType("application/zip")
+                    .contentType(CONTENT_TYPE_ZIP)
                     .build();
             
             CreateMultipartUploadResponse createResponse = s3Client.createMultipartUpload(createRequest);
