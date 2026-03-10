@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!-- Define propriedades para configuração -->
+    <springProperty scope="context" name="applicationName" source="spring.application.name" defaultValue="video-processing-worker"/>
+    
+    <!-- Console Appender com JSON -->
+    <appender name="CONSOLE_JSON" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <!-- Campos customizados para o CloudWatch -->
+            <customFields>{"application":"${applicationName}"}</customFields>
+            
+            <!-- Incluir informações de contexto -->
+            <includeMdc>true</includeMdc>
+            <includeContext>true</includeContext>
+            <includeTags>true</includeTags>
+            <includeCallerData>false</includeCallerData>
+            <includeStructuredArguments>true</includeStructuredArguments>
+            
+            <!-- Configurar nomes de campos -->
+            <fieldNames>
+                <timestamp>timestamp</timestamp>
+                <version>version</version>
+                <message>message</message>
+                <logger>logger</logger>
+                <thread>thread</thread>
+                <level>level</level>
+                <levelValue>levelValue</levelValue>
+                <stackTrace>stackTrace</stackTrace>
+            </fieldNames>
+            
+            <!-- Provider para adicionar campos adicionais -->
+            <provider class="net.logstash.logback.composite.loggingevent.LoggingEventPatternJsonProvider">
+                <pattern>
+                    {
+                        "environment": "${ENVIRONMENT:-local}",
+                        "region": "${AWS_REGION:-us-east-1}"
+                    }
+                </pattern>
+            </provider>
+        </encoder>
+    </appender>
+
+    <!-- Console Appender com formato legível para desenvolvimento local -->
+    <appender name="CONSOLE_PLAIN" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Appender para arquivos (opcional) -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/application.log</file>
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <customFields>{"application":"${applicationName}"}</customFields>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>logs/application.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>7</maxHistory>
+        </rollingPolicy>
+    </appender>
+
+    <!-- Profile específico para produção (AWS) -->
+    <springProfile name="prod,production,aws">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE_JSON"/>
+        </root>
+        <logger name="com.fiap.videoprocessor" level="INFO"/>
+        <logger name="software.amazon.awssdk" level="WARN"/>
+    </springProfile>
+
+    <!-- Profile para desenvolvimento local -->
+    <springProfile name="dev,local">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE_PLAIN"/>
+        </root>
+        <logger name="com.fiap.videoprocessor" level="DEBUG"/>
+    </springProfile>
+
+    <!-- Profile padrão (quando nenhum profile está ativo) - usa JSON -->
+    <springProfile name="!dev &amp; !local">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE_JSON"/>
+        </root>
+        <logger name="com.fiap.videoprocessor" level="DEBUG"/>
+        <logger name="software.amazon.awssdk" level="WARN"/>
+    </springProfile>
+</configuration>
